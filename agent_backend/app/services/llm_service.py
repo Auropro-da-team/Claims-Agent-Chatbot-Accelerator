@@ -9,7 +9,7 @@ from config import settings
 # -------------------------
 vertexai.init(project=settings.PROJECT_ID, location=settings.REGION)
 embedding_model = TextEmbeddingModel.from_pretrained("text-embedding-004")
-llm_model = GenerativeModel("gemini-1.5-flash")
+llm_model = GenerativeModel("gemini-2.5-flash")
 
 # -------------------------
 # CONTEXTUAL QUERY REWRITING
