@@ -1,0 +1,7 @@
+functions-framework
+flask
+flask-cors
+google-cloud-aiplatform
+google-cloud-storage
+vertexai
+python-dotenv
