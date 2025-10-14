@@ -1,0 +1,28 @@
+runtime: nodejs20
+service: documentagentpoc
+instance_class: F2 # F2 for better resources; consider F4 if CPU/memory bottlenecks persist
+
+automatic_scaling:
+  min_instances: 1   # Keeps one instance always warm to reduce cold starts
+  max_instances: 7   # Limits scaling to control costs; adjust based on traffic
+  target_cpu_utilization: 0.75  # Slightly increased for better resource usage
+  target_throughput_utilization: 0.85  # Increased to delay scaling up
+
+handlers:
+  # Warm-up handler to initialize the app and reduce first-request latency
+  - url: /_ah/warmup
+    script: auto
+    secure: always
+
+  # Serve static assets (JS, CSS, images, etc.) with compression
+  - url: /(.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json))
+    static_files: dist/\1
+    upload: dist/.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json)
+    secure: always
+  # Enable Gzip compression for faster asset delivery
+
+  # Serve index.html for all other routes (SPA routing)
+  - url: /.*
+    static_files: dist/index.html
+    upload: dist/index.html
+    secure: always
