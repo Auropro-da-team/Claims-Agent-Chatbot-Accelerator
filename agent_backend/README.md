@@ -1699,13 +1699,6 @@ SOFTWARE.
 
 ---
 
-## Acknowledgments
-
-- **Google Cloud Platform**: Vertex AI, Cloud Functions, Cloud Storage
-- **Google Gemini Team**: For the powerful Gemini 2.5 Flash model
-- **Anthropic**: For inspiration from conversational AI best practices
-- **Insurance Industry Partners**: For domain expertise and testing
----
 
 **Built with ❤️ by the Auropro Team**
 
