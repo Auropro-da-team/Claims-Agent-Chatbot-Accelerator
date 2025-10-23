@@ -5,7 +5,7 @@
 ![Built with Google Cloud](https://img.shields.io/badge/Built%20with-Google%20Cloud-orange)
 ![Gemini 2.5 Flash](https://img.shields.io/badge/Gemini-2.5%20Flash-purple)
 
-An enterprise-grade, conversational AI assistant for the insurance industry. This agent leverages a state-of-the-art Retrieval-Augmented Generation (RAG) architecture using **Gemini 2.5 Flash** and **Vertex AI Vector Search** to provide secure, accurate, and auditable responses for policy inquiries and claims processing.
+A conversational AI assistant for the insurance industry. This agent leverages a state-of-the-art Retrieval-Augmented Generation (RAG) architecture using **Gemini 2.5 Flash** and **Vertex AI Vector Search** to provide secure, accurate, and auditable responses for policy inquiries and claims processing.
 
 ---
 
@@ -16,7 +16,7 @@ An enterprise-grade, conversational AI assistant for the insurance industry. Thi
 - [Core Algorithms & Techniques](#core-algorithms--techniques)
 - [Technology Stack](#technology-stack)
 - [Project Structure](#project-structure)
-- [Code Flow Explained](#code-flow-explained)
+- [Code Flow](#code-flow)
 - [Key Architectural Decisions](#key-architectural-decisions)
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
@@ -35,21 +35,15 @@ An enterprise-grade, conversational AI assistant for the insurance industry. Thi
 
 ### Core AI Capabilities
 
-- **🤖 State-of-the-Art Conversational AI**: Utilizes the Gemini 2.5 Flash model for natural, context-aware dialogue. The agent is explicitly prompted to avoid robotic phrases, ensuring a professional and human-like user experience.
+- **🤖 Conversational AI**: Utilizes the Gemini 2.5 Flash model for natural, context-aware dialogue. The agent is explicitly prompted to avoid robotic phrases, ensuring a professional and human-like user experience.
 
-- **🎯 High-Precision RAG Pipeline**: Employs Vertex AI Vector Search to retrieve the most relevant policy document sections, grounding all LLM responses in factual, source-verified data to eliminate hallucinations.
+- **🎯 RAG Pipeline**: Employs Vertex AI Vector Search to retrieve the most relevant policy document sections, grounding all LLM responses in factual, source-verified data to eliminate hallucinations.
 
 - **🔍 Content-Based Policy Search**: Robustly identifies and validates policy numbers by searching the actual text content of documents in Google Cloud Storage, overcoming potential OCR inconsistencies and metadata limitations.
 
 - **💬 Multi-Turn Context Handling**: Intelligently analyzes user queries over multiple turns, restores conversational context after interruptions (e.g., asking for a policy number), and understands complex, evolving user intents.
 
 - **🧠 Hybrid Intent Detection**: Combines regex pattern matching with LLM-based classification for robust query understanding across diverse user inputs.
-
-### Enterprise-Ready Features
-
-- **📋 Full Auditability**: Dynamically generates and embeds citations in responses, linking every piece of retrieved information back to the specific source document and page number.
-
-- **🔒 Secure by Design**: Follows the 12-Factor App methodology with a strict separation of configuration from code. No sensitive data is ever committed to version control.
 
 - **☁️ Scalable & Serverless**: Built on Google Cloud Functions for automatic scaling, high availability, and cost-efficiency.
 
@@ -684,7 +678,7 @@ agent_backend/
 
 ---
 
-## Code Flow Explained
+## Code Flow
 
 ### Complete Request Flow
 
@@ -1712,40 +1706,6 @@ SOFTWARE.
 - **Google Gemini Team**: For the powerful Gemini 2.5 Flash model
 - **Anthropic**: For inspiration from conversational AI best practices
 - **Insurance Industry Partners**: For domain expertise and testing
-
----
-
-## Contact & Support
-
-- **GitHub Issues**: [Report bugs or request features](https://github.com/Auropro-da-team/Claims-Agent-Chatbot-Accelrator-2-/issues)
-- **Discussions**: [Ask questions or share ideas](https://github.com/Auropro-da-team/Claims-Agent-Chatbot-Accelrator-2-/discussions)
-- **Email**: support@auropro.com (replace with actual email)
-
----
-
-## Roadmap
-
-### Q1 2025
-- ✅ Core RAG pipeline with Gemini 2.5 Flash
-- ✅ Content-based policy validation
-- ✅ Multi-turn conversation handling
-- ✅ FNOL state machine
-
-### upcoming 2025
-- 🔄 Parallel GCS fetching (in progress)
-- 🔄 LLM response streaming
-- 🔄 Agentic frameworks implementation
-- 📋 Voice interface integration
-- 📋 Advanced analytics dashboard
-- 📋 A/B testing framework
-- 📋 Fine-tuned Gemini model for insurance domain
-- 📋 PDF report generation
-- 📋 Slack/Teams integrations
-- 📋 Real-time claim status updates
-- 📋 Agent-assisted mode (human-in-the-loop)
-
-**Legend**: ✅ Completed | 🔄 In Progress | 📋 Planned
-
 ---
 
 **Built with ❤️ by the Auropro Team**
