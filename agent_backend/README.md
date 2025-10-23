@@ -54,7 +54,6 @@ A conversational AI assistant for the insurance industry. This agent leverages a
 - **✅ Policy Validation**: Content-based validation ensures policy numbers are extracted and verified against actual document content, not just metadata.
 
 ---
-
 ## System Architecture
 
 The application follows a robust Retrieval-Augmented Generation (RAG) pattern, deployed as a serverless cloud function for maximum scalability and efficiency.
