@@ -61,22 +61,25 @@ The application follows a robust Retrieval-Augmented Generation (RAG) pattern, d
 ```mermaid
 graph TD
     A[User Client] -->|1. HTTPS POST Request| B(Google Cloud Function);
-    B -->|2. Analyzes Intent & Extracts Entities| C{AnalysisService};
-    C -->|3. Policy # Required & Missing?| D{Mandatory Policy Gate};
+    B -->|2. Invokes Analysis| C[AnalysisService];
+    C -->|3. Intent Understanding & Entity Extraction| H(Vertex AI Gemini 2.5 Flash);
+    C -->|4. Policy # Required & Missing?| D{Mandatory Policy Gate};
     D -->|Yes - Ask User| B;
     D -->|No / Provided| E[SearchService];
-    E -->|4a. Semantic Search| F(Vertex AI Vector Search);
-    E -->|4b. Content-Based Filtering| G[Google Cloud Storage];
+    E -->|5a. Semantic Search| F(Vertex AI Vector Search);
+    E -->|5b. Content-Based Filtering| G[Google Cloud Storage];
     F -->|Retrieves Relevant Chunks| E;
     G -->|Retrieves Document Text| E;
-    E -->|5. Compiles Context| B;
-    B -->|6. Generates Grounded Response| H(Vertex AI Gemini 2.5 Flash);
-    H -->|7. Adds Citations| B;
-    B -->|8. HTTPS JSON Response| A;
-    
+    E -->|6. Compiles Context| B;
+    B -->|7. Generates Grounded Response| H;
+    H -->|8. Adds Citations| B;
+    B -->|9. HTTPS JSON Response| A;
+
+    style C fill:#ffcc99
     style D fill:#ff9999
     style E fill:#99ccff
     style H fill:#cc99ff
+
 ```
 
 ### Architecture Components
