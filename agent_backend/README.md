@@ -842,9 +842,9 @@ if validate_policy_in_content(user_policy, text):
 - LLM handles edge cases and ambiguous queries
 
 **Performance Impact**:
-- Average query classification: **12ms** (vs. 500ms pure LLM)
-- Cost reduction: **80%** (fewer LLM calls)
-- Accuracy maintained: **95%+**
+- Average query classification: **approx 12ms** (vs. 500ms pure LLM)
+- Cost reduction: with fewer LLM calls
+- Accuracy maintained
 
 ---
 
@@ -1382,80 +1382,15 @@ limiter = Limiter(
 
 Typical request latency: **2-4 seconds**
 
-| Component | Latency | Optimization |
-|-----------|---------|--------------|
-| Intent Analysis | 10-50ms | Regex-first approach (✅ optimized) |
-| Policy Extraction | 5-20ms | Compiled regex patterns (✅ optimized) |
-| Vector Search | 300-800ms | Increase neighbors cautiously |
-| GCS Document Fetch | 500-1500ms | **Bottleneck** - see optimizations below |
-| LLM Response Generation | 800-2000ms | Use streaming (future) |
-| Citation Generation | 20-50ms | Lazy evaluation (✅ optimized) |
+| Component | Optimization |
+|-----------|--------------|
+| Intent Analysis | Regex-first approach (✅ optimized) |
+| Policy Extraction | Compiled regex patterns (✅ optimized) |
+| Vector Search | Increase neighbors cautiously |
+| GCS Document Fetch | parallel fetching |
+| LLM Response Generation | Use streaming (future) |
+| Citation Generation | Lazy evaluation (✅ optimized) |
 
-### Optimization Strategies
-
-**1. GCS Fetch Optimization**:
-```python
-# BEFORE: Sequential fetching (slow)
-for chunk_id in chunk_ids:
-    text = fetch_from_gcs(chunk_id)  # 50ms each × 30 = 1500ms
-
-# AFTER: Parallel fetching (fast)
-from concurrent.futures import ThreadPoolExecutor
-
-with ThreadPoolExecutor(max_workers=10) as executor:
-    texts = list(executor.map(fetch_from_gcs, chunk_ids))  # 50ms total
-```
-
-**Expected Improvement**: **-70% latency** (1500ms → 450ms)
-
-**2. Caching Frequently Accessed Documents**:
-```python
-from functools import lru_cache
-
-@lru_cache(maxsize=1000)
-def fetch_from_gcs_cached(chunk_id):
-    # Cache popular documents in memory
-    return storage_client.bucket(BUCKET_NAME).blob(chunk_id).download_as_text()
-```
-
-**Expected Improvement**: **-90% latency** for cached docs (50ms → 5ms)
-
-**3. Reduce Vector Search Neighbors**:
-```python
-# High recall (slower)
-num_neighbors=200  # 800ms
-
-# Balanced (recommended)
-num_neighbors=100  # 500ms
-
-# Fast (lower recall)
-num_neighbors=50   # 300ms
-```
-
-**Trade-off**: -40% latency vs. -5% recall
-
-**4. Enable LLM Streaming** (Future Enhancement):
-```python
-# Stream tokens as generated
-for chunk in llm_model.generate_content_stream(prompt):
-    yield chunk.text
-```
-
-**Expected Improvement**: **-50% perceived latency** (users see partial responses immediately)
-
-### Monitoring Recommendations
-
-**Key Metrics to Track**:
-- **P50/P95/P99 Latency**: Target < 3s / 5s / 8s
-- **Success Rate**: Target > 98%
-- **Policy Extraction Accuracy**: Target > 95%
-- **Citation Accuracy**: Target 100% (no hallucinated refs)
-- **Vector Search Recall**: Target > 90%
-
-**Logging**:
-```python
-logging.info(f"METRICS: latency={elapsed}ms, chunks={len(chunks)}, policy_found={bool(found_policy)}")
-```
 
 ---
 
@@ -1605,7 +1540,7 @@ We welcome contributions! Please follow these guidelines:
 
 1. **Fork the repository**
 ```bash
-git clone https://github.com/YOUR-USERNAME/Claims-Agent-Chatbot-Accelrator-2-.git
+git clone https://github.com/Auropro-da-team/Claims-Agent-Chatbot-Accelrator-2-.git
 cd Claims-Agent-Chatbot-Accelrator-2-
 git checkout -b feature/your-feature-name
 ```
@@ -1635,37 +1570,7 @@ git commit -m "feat: Add support for multi-policy comparisons"
 git push origin feature/your-feature-name
 ```
 
-### Code Style
-
-**Good**:
-```python
-def extract_policy_identifier(query: str) -> list[str]:
-    """
-    Extract policy numbers from user query using regex patterns.
-    
-    Args:
-        query: User's input query string
-        
-    Returns:
-        List of extracted policy numbers (deduplicated)
-        
-    Example:
-        >>> extract_policy_identifier("My policy LP985240156")
-        ['LP985240156']
-    """
-    policy_numbers = []
-    # Implementation...
-    return policy_numbers
-```
-
-**Bad**:
-```python
-def extract(q):  # No type hints, unclear name
-    pn = []  # Unclear variable name
-    # No docstring
-    return pn
-```
-
+---
 
 ## License
 
@@ -1696,4 +1601,4 @@ SOFTWARE.
 
 **Built with ❤️ by the Auropro Team**
 
-*Powering the future of insurance customer service with AI*
+*Powering the insurance customer service with AI*
