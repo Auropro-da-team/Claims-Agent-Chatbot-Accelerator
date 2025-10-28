@@ -1605,7 +1605,7 @@ We welcome contributions! Please follow these guidelines:
 
 1. **Fork the repository**
 ```bash
-git clone https://github.com/YOUR-USERNAME/Claims-Agent-Chatbot-Accelrator-2-.git
+git clone https://github.com/Auropro-da-team/Claims-Agent-Chatbot-Accelrator-2-.git
 cd Claims-Agent-Chatbot-Accelrator-2-
 git checkout -b feature/your-feature-name
 ```
