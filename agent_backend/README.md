@@ -5,7 +5,7 @@
 ![Built with Google Cloud](https://img.shields.io/badge/Built%20with-Google%20Cloud-orange)
 ![Gemini 2.5 Flash](https://img.shields.io/badge/Gemini-2.5%20Flash-purple)
 
-A conversational AI assistant for the insurance industry. This agent leverages a state-of-the-art Retrieval-Augmented Generation (RAG) architecture using **Gemini 2.5 Flash** and **Vertex AI Vector Search** to provide secure, accurate, and auditable responses for policy inquiries and claims processing.
+A conversational AI assistant for the insurance industry. This agent leverages a Retrieval-Augmented Generation (RAG) architecture using **Gemini 2.5 Flash** and **Vertex AI Vector Search** to provide secure, accurate, and auditable responses for policy inquiries and claims processing.
 
 ---
 
@@ -1665,14 +1665,6 @@ def extract(q):  # No type hints, unclear name
     # No docstring
     return pn
 ```
-
-### Areas for Contribution
-
-- **Algorithm Improvements**: Better policy extraction patterns, faster search
-- **New Features**: Multi-language support, voice interface, PDF generation
-- **Performance**: Caching strategies, parallel processing
-- **Testing**: More integration tests, edge case coverage
-- **Documentation**: Tutorials, architecture diagrams
 
 ---
 
