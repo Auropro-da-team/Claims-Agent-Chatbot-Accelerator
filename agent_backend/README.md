@@ -1635,37 +1635,6 @@ git commit -m "feat: Add support for multi-policy comparisons"
 git push origin feature/your-feature-name
 ```
 
-### Code Style
-
-**Good**:
-```python
-def extract_policy_identifier(query: str) -> list[str]:
-    """
-    Extract policy numbers from user query using regex patterns.
-    
-    Args:
-        query: User's input query string
-        
-    Returns:
-        List of extracted policy numbers (deduplicated)
-        
-    Example:
-        >>> extract_policy_identifier("My policy LP985240156")
-        ['LP985240156']
-    """
-    policy_numbers = []
-    # Implementation...
-    return policy_numbers
-```
-
-**Bad**:
-```python
-def extract(q):  # No type hints, unclear name
-    pn = []  # Unclear variable name
-    # No docstring
-    return pn
-```
-
 ---
 
 ## License
