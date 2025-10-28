@@ -657,22 +657,28 @@ agent_backend/
 │   │   ├── llm_service.py          # Gemini model interaction
 │   │   └── search_service.py       # Vector search orchestration
 │   │
-│   └── utils/
-│       ├── __init__.py
-│       ├── history_manager.py      # Conversation state management
-│       ├── parsers.py              # Entity extraction & parsing
-│       └── reference_builder.py   # Citation generation
-│
+|   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── history_manager.py      # Conversation state management
+│   │   ├── parsers.py              # Entity extraction & parsing 
+│   │   └── reference_builder.py    # Citation generation  
+│   │  
+|   ├── __init__.py
+│   └── main.py                     # Cloud Function Entrypoint
+│      
 ├── config/
 │   ├── __init__.py
-│   └── settings.py                # Configuration & system prompts
+│   └── settings.py                # Configuration
+│
+├── prompts/
+│   └── insurance_claim_assistant_v1.0.yaml      # Prompts
 │
 ├── tests/
 │   ├── __init__.py
 │   └── journey_b_standard_fnol.sh # Integration tests
 │
-├── main.py                        # Cloud Function entry point
-├── requirements.txt               # Python dependencies
+├── prompt_registry.yaml          # Prompt Registry
+├── requirements.txt              # Python dependencies
 ├── .env                          # Environment variables (local)
 ├── .gitignore                    # Git ignore rules
 └── README.md                     # This file
@@ -813,23 +819,6 @@ agent_backend/
 - OCR inconsistencies make exact string matching unreliable
 - Metadata can be incomplete or incorrectly parsed
 
-**Implementation**:
-```python
-# WRONG: Metadata-based (unreliable)
-if chunk.metadata.get('policy_number') == user_policy:
-    return chunk
-
-# RIGHT: Content-based (robust)
-text = fetch_from_gcs(chunk_id)
-if validate_policy_in_content(user_policy, text):
-    return chunk
-```
-
-**Trade-offs**:
-- ✅ **Pro**: 40% higher recall, handles OCR variations
-- ❌ **Con**: Higher latency (GCS fetch per chunk)
-- **Mitigation**: Parallel fetching, caching frequently accessed documents
-
 ---
 
 ### 2. Hybrid Intent Classification (Regex + LLM)
@@ -865,8 +854,8 @@ ANSWER_TRUNCATION = 400   # Chars per historical answer
 ```
 
 **Impact**:
-- Context relevance: **92%** (vs. 67% with full history)
-- Token usage: **-60%** (reduced from 50K to 20K avg)
+- Context relevance: **92%** 
+- Token usage: Reduced
 
 ---
 
@@ -890,8 +879,8 @@ policy_clarification_status = {
 ```
 
 **Impact**:
-- User satisfaction: **+25%** (fewer repetitive interactions)
-- Conversation length: **-30%** (faster resolution)
+- User satisfaction: fewer repetitive interactions
+- Conversation length: faster resolution
 
 ---
 
@@ -910,8 +899,8 @@ policy_clarification_status = {
 3. **Comparison**: Structured table → side-by-side analysis
 
 **Impact**:
-- Response quality: **+40%** (human evaluation)
-- Format consistency: **95%** (vs. 60% with generic prompt)
+- Response quality
+- Format consistency
 
 ---
 
@@ -926,8 +915,8 @@ policy_clarification_status = {
 - Auto-cleanup via function lifecycle
 
 **Trade-offs**:
-- ✅ **Pro**: Zero latency, no DB costs, simple implementation
-- ❌ **Con**: Lost on function cold start
+- **Pro**: Zero latency, no DB costs, simple implementation
+- **Con**: Lost on function cold start
 - **Acceptable**: Users expect to restart long-inactive conversations
 
 ---
@@ -950,9 +939,6 @@ for doc in retrieved_docs:
         skip  # Don't cite unused sources
 ```
 
-**Impact**:
-- Citation count: **5-8** per response (vs. 15-25 previously)
-- Answer readability: **+35%** (less cluttered)
 
 ---
 
