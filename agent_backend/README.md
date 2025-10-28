@@ -89,7 +89,7 @@ graph TD
 3. **Search Service** (`search_service.py`): Vector search orchestration, document retrieval, and result ranking
 4. **Document Service** (`document_service.py`): Content validation, policy number verification, and GCS integration
 5. **LLM Service** (`llm_service.py`): Gemini model interaction, query rewriting, and response generation
-6. **Utility Layer**: History management, parsing, and citation generation
+6. **Utility Layer**: Contains modules for history management, parsing, prompt loading, and citation generation.
 
 ---
 
