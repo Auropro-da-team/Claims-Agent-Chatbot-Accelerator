@@ -3,7 +3,7 @@ import logging
 from app.services.llm_service import llm_model
 from app.utils.history_manager import conversation_history
 from app.utils.parsers import extract_policy_identifier
-
+from app.utils.prompt_loader import get_prompt
 # -------------------------
 # ENHANCED QUERY ANALYSIS
 # -------------------------
@@ -79,22 +79,7 @@ def analyze_query_intent(query: str) -> dict:
     # -------- LLM fallback if no regex match --------
     if not detected_intents:
         logging.info(f"[Intent] No regex match for '{query}'. Using LLM fallback.")
-        intent_classifier_prompt = f"""
-        You are an expert at classifying insurance-related user queries.
-        Classify this query into one of:
-        ['policy_summary', 'coverage_check', 'limit_conflict', 'comparison', 'personal_claim', 'open_ended', 'general']
-
-        Examples:
-        - "pull up the lemonade renters policy" -> policy_summary
-        - "my policy covers 20k but damage is 50k" -> limit_conflict
-        - "is flood covered" -> coverage_check
-        - "my car was in an accident" -> personal_claim
-        - "what can you do?" -> open_ended
-        - "that's interesting" -> general
-
-        Query: "{query}"
-        Intent:
-        """
+        intent_classifier_prompt = get_prompt('intent_classifier', query=query)
         try:
             response = llm_model.generate_content(intent_classifier_prompt)
             llm_intent = response.text.strip().replace("'", "").replace('"', '')
@@ -159,16 +144,7 @@ def detect_incident_context_in_history(session_id: str, conversation_history: di
                 continue
 
             # Use LLM to detect incident intelligently
-            detection_prompt = f"""
-            Analyze the user's query to determine if it describes a real event that has already happened (like an accident, damage, or breakdown).
-            - "my car broke down" -> YES
-            - "is water damage covered?" -> NO
-            - "there was a fire in my kitchen" -> YES
-            - "what if there is a fire?" -> NO
-            Query: "{user_query}"
-            Does this describe a real event that already happened? Answer with only YES or NO.
-            """
-
+            detection_prompt = get_prompt('incident_detector', user_query=user_query)
             try:
                 response = llm_model.generate_content(
                     detection_prompt,
@@ -225,12 +201,7 @@ def check_insurance_relevance(query: str, chunks: list, conversation_context: st
     is_insurance_related = any(keyword in query_lower for keyword in insurance_keywords)
 
     if not is_insurance_related:
-        relevance_prompt = f"""
-        Analyze if this query is related to insurance, claims, policy coverage, or situations that might need insurance coverage.
-        Query: "{query}"
-        Previous conversation context: {conversation_context}
-        Respond with only "YES" or "NO".
-        """
+        relevance_prompt = get_prompt('relevance_checker', query=query, conversation_context=conversation_context)
 
         relevance_response = llm_model.generate_content(relevance_prompt)
         is_insurance_related = "YES" in relevance_response.text.strip().upper()
@@ -368,24 +339,9 @@ def determine_policy_requirement(query_analysis: dict, user_query: str = "") -> 
             is_loss_event = any(kw in user_query.lower() for kw in loss_keywords)
 
             if is_loss_event:
-                llm_prompt = (
-                    f"The user said: '{user_query}'.\n\n"
-                    "You are an empathetic insurance claims assistant.\n"
-                    "1) Acknowledge their situation naturally (e.g., 'I’m sorry to hear about the water damage').\n"
-                    "2) Make it clear that the policy number is REQUIRED before you can check any coverage or details.\n"
-                    "3) Politely ask them to provide their policy number from their declarations page or policy document.\n"
-                    "Be supportive, concise, and professional."
-                )
+                llm_prompt = get_prompt('empathetic_clarification_generator', user_query=user_query)
             else:
-                llm_prompt = (
-                    f"The user said: '{user_query}'.\n\n"
-                    "You are a professional insurance assistant.\n"
-                    "1) Do not add empathy since this is not a loss/damage situation.\n"
-                    "2) Clearly state that the policy number is REQUIRED before you can check coverage or details.\n"
-                    "3) Politely ask them to provide their policy number from their declarations page or policy document.\n"
-                    "Keep tone polite and concise."
-                )
-
+                llm_prompt = get_prompt('standard_clarification_generator', user_query=user_query)
             requirements['ask_message'] = llm_model.generate_content(
                 llm_prompt, generation_config={'temperature': 0.3}
             ).text.strip()

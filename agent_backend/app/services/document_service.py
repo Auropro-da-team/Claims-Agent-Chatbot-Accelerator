@@ -1,5 +1,6 @@
 import re
 import logging
+import yaml
 from google.cloud import storage
 from config import settings
 from app.utils.parsers import extract_document_name

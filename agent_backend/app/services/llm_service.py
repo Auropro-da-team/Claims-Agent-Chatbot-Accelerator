@@ -3,7 +3,7 @@ import vertexai
 from vertexai.language_models import TextEmbeddingModel
 from vertexai.preview.generative_models import GenerativeModel
 from config import settings
-
+from app.utils.prompt_loader import get_prompt
 # -------------------------
 # INITIALIZATION
 # -------------------------
@@ -23,22 +23,7 @@ def create_contextual_query(query: str, conversation_context: str) -> str:
     if not conversation_context or len(query.split()) > 10:
         return query
 
-    rewrite_prompt = f"""
-    You are a query rewriting expert. Your task is to take a conversation history and a new user question,
-    and rewrite the user question into a single, self-contained, and specific search query.
-
-    - If the new question is a follow-up (e.g., "what about for a crash?", "is that covered?"), incorporate key entities (like policy names, policy numbers, or specific topics) from the previous turns into the new query.
-    - If the new question is completely unrelated or already specific, just use the new question as the query.
-    - The output MUST be only the rewritten search query and nothing else.
-
-    --- CONVERSATION HISTORY ---
-    {conversation_context}
-
-    --- NEW USER QUESTION ---
-    "{query}"
-
-    --- REWRITTEN SEARCH QUERY ---
-    """
+    rewrite_prompt = get_prompt('contextual_query_rewriter', conversation_context=conversation_context, query=query)
     try:
         response = llm_model.generate_content(rewrite_prompt, generation_config={'temperature': 0.0})
         rewritten_query = response.text.strip().replace('"', '')
@@ -59,23 +44,8 @@ def expand_query_for_better_search(query: str, conversation_context: str = "") -
     if extract_policy_identifier(query):
         return query
 
-    expansion_prompt = f"""
-    You are a search query expansion expert for the insurance industry.
-    Your task is to take a user's query and expand it with 3 to 5 additional, highly relevant keywords or phrases that will improve vector search results.
-    Focus on synonyms and related concepts. Do not change the original query.
-    
-    Example 1:
-    Query: "for a customer with Mountain West Commercial Insurance policy what policy can i sell for renewal"
-    Expanded Query: for a customer with Mountain West Commercial Insurance policy what policy can i sell for renewal similar alternative business coverage comparison
+    expansion_prompt = get_prompt('query_expander', query=query)
 
-    Example 2:
-    Query: "what is covered for water damage"
-    Expanded Query: what is covered for water damage pipe burst flood leak coverage inclusions exclusions
-    
-    Now, expand this query:
-    Query: "{query}"
-    Expanded Query:
-    """
     try:
         response = llm_model.generate_content(expansion_prompt)
         expanded_query = response.text.strip()

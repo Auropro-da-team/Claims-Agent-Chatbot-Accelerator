@@ -5,3 +5,4 @@ google-cloud-aiplatform
 google-cloud-storage
 vertexai
 python-dotenv
+PyYAML

@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 from config import settings
+from app.utils.prompt_loader import get_prompt
 from app.utils.history_manager import conversation_history, policy_clarification_status
 from app.utils.parsers import (
     extract_policy_fields,
@@ -31,7 +32,7 @@ from app.services.search_service import (
     enhanced_policy_document_search
 )
 from app.services.document_service import validate_policy_number_in_document_content
-
+import yaml
 # -------------------------
 # INITIALIZATION
 # -------------------------
@@ -388,9 +389,7 @@ def query_documents(request):
         if query_analysis['needs_clarification'] and not conversation_context:
             logging.info(f"ACTION: Asking for clarification for broad query '{user_query}'")
 
-            clarification_prompt = f"""
-            The user asked "{user_query}" which is too broad. Ask 1-3 clarifying questions to help them narrow their search.
-            """
+            clarification_prompt = get_prompt('open_ended_clarification', user_query=user_query)
             try:
                 llm_response = llm_model.generate_content(clarification_prompt)
                 answer = llm_response.text.strip()
@@ -471,53 +470,11 @@ def query_documents(request):
                     )
                     logging.info(f"📋 No incident context - general inquiry")
 
-                clarification_prompt = f"""You are an experienced insurance claims specialist.
-
-{situation_description}
-
-YOUR TASK: Ask 2-3 specific, targeted questions to understand their situation before checking coverage.
-
-CRITICAL RULES:
-- Be conversational and natural - NOT robotic
-- NEVER use: "I'm here to help", "I'd be happy to", "I'm glad to assist"
-- Get straight to the questions
-- Be direct and professional
-
-FOCUS YOUR QUESTIONS ON:
-1. When the incident occurred (or if it's about future coverage)
-2. Specific details about what happened
-3. Extent/severity and any other parties involved
-
-EXAMPLES OF GOOD QUESTIONS:
-❌ BAD: "I'm here to help! To provide accurate coverage details, I need to know when this happened."
-✅ GOOD: "To check your coverage: When did this happen? What specifically broke down? Have you had it diagnosed?"
-
-❌ BAD: "I'd be happy to look that up for you. Let me ask a few questions first."
-✅ GOOD: "To pull up your exact coverage: When did the accident occur? Were there injuries? Was another vehicle involved?"
-
-NOW RESPOND with your 2-3 questions for this situation. Be natural and conversational.
-
-Critical rules:
-- Sound like a real person, NOT a chatbot
-- NEVER use phrases like: "I'm here to help", "I can help with that", "I'm happy to assist", "I'd be glad to"
-- Get straight to the questions naturally
-- Be direct, professional, and conversational
-- Avoid robotic politeness
-
-Good examples:
-❌ BAD: "I'm here to help! To provide accurate coverage details, I need to know..."
-✅ GOOD: "To check what's covered for the pipe burst, I need a few details: When did this happen? Which rooms were affected? How extensive is the water damage?"
-
-❌ BAD: "I'd be happy to look that up for you. To give you the most relevant information..."
-✅ GOOD: "Got it. To pull up your exact coverage: When did the accident occur? Was there any injury involved? Have you already filed a police report?"
-
-❌ BAD: "I can help with that. Let me ask you a few questions..."
-✅ GOOD: "To give you accurate information about your coverage: What specific situation are you asking about? Is this something that already happened or are you checking coverage for future scenarios?"
-
-Now respond to: "{user_query}"
-Be natural and conversational. Ask your 2-3 questions directly without robotic pleasantries.
-"""
-
+                clarification_prompt = get_prompt(
+    'intelligent_clarification_generator',
+    situation_description=situation_description,
+    user_query=user_query
+)
                 try:
                     llm_response = llm_model.generate_content(
                         clarification_prompt,
@@ -736,92 +693,36 @@ Be natural and conversational. Ask your 2-3 questions directly without robotic p
                 query_analysis['needs_policyholder_info'] = True
 
         # SCENARIO-BASED PROMPT GENERATION
-        if query_analysis['primary_intent'] == 'fnol':
-            # SCENARIO B: FNOL handling
+        # SCENARIO-BASED PROMPT GENERATION
+        system_guidance = get_prompt('main_system_guidance')
+        scenario_block = ""
+        task = "Respond conversationally in natural flowing sentences."
+        format_instructions = "No bullet points."
+
+        intent = query_analysis['primary_intent']
+        if intent == 'fnol':
             fnol_state = generate_fnol_response(user_query, {}, conversation_history.get(session_id, []))
+            scenario_block = f"SCENARIO: First Notice of Loss (FNOL) - Claim Reporting\nCurrent Stage: {fnol_state['stage']}"
+            task = "Acknowledge their loss, guide them through the claim process, and collect required information."
+        elif intent == 'policy_info':
+            scenario_block = "SCENARIO: Policy Information Request"
+            task = "Provide a high-level summary or answer specific questions about the policy."
+            format_instructions = "Respond conversationally. NO bullet points unless it's a complex table scenario."
+        elif intent == 'comparison':
+            scenario_block = "SCENARIO: Policy Comparison (Table Required)"
+            task = "Use the markdown table format for a side-by-side comparison."
+            format_instructions = "Use the table format from SCENARIO C guidelines."
 
-            enhanced_prompt = f"""
-            {settings.SYSTEM_GUIDANCE}
-
-            SCENARIO: First Notice of Loss (FNOL) - Claim Reporting
-            Current Stage: {fnol_state['stage']}
-
-            User's message: "{user_query}"
-            Previous conversation: {conversation_context}
-
-            YOUR TASK:
-            - Acknowledge their loss naturally and empathetically
-            - Guide them conversationally through the claim process
-            - Collect required information step by step
-            - Validate loss type matches their policy
-            - Confirm details before issuing claim number
-
-            Context from documents: {context}
-
-            Respond conversationally without bullet points.
-            """
-        # FNOL-specific: Generate claim number if confirmation detected
-        if query_analysis['primary_intent'] == 'fnol':
-            fnol_state = generate_fnol_response(user_query, {}, conversation_history.get(session_id, []))
-
-            # Check if user confirmed and we should issue claim number
-            if fnol_state['stage'] == 'claim_number_issued' and found_policy_numbers:
-                claim_number = generate_claim_number(found_policy_numbers[0])
-
-                # Append claim number to answer
-                if not any(phrase in answer.lower() for phrase in ['claim number', 'claim #', 'claim id']):
-                    answer += f"\n\nYour claim number is **{claim_number}**. We'll be in touch within 24-48 hours to proceed with your claim."
-        elif query_analysis['primary_intent'] == 'policy_info':
-            # SCENARIO A: Policy information request
-            enhanced_prompt = f"""
-            {settings.SYSTEM_GUIDANCE}
-
-            SCENARIO: Policy Information Request
-
-            User's question: "{user_query}"
-            Policy context: {conversation_context}
-
-            YOUR TASK:
-            - If no policy number: Ask for it conversationally
-            - After getting policy number: Provide high-level summary (name, number, product, dates)
-            - Follow up: "What else would you like to know?"
-            - Answer specific questions naturally in flowing sentences
-
-            Context from documents: {context}
-
-            Respond conversationally. NO bullet points unless it's a complex table scenario.
-            """
-
-        elif query_analysis['primary_intent'] == 'comparison':
-            # SCENARIO C: Complex comparison requiring table
-            enhanced_prompt = f"""
-            {settings.SYSTEM_GUIDANCE}
-
-            SCENARIO: Policy Comparison (Table Required)
-
-            User's request: "{user_query}"
-
-            YOUR TASK:
-            - Use the markdown table format for side-by-side comparison
-            - Include only the most relevant coverage details
-            - Keep it organized and scannable
-
-            Context from documents: {context}
-
-            Use the table format from SCENARIO C guidelines.
-            """
-
-        else:
-            # Default conversational response
-            enhanced_prompt = f"""
-            {settings.SYSTEM_GUIDANCE}
-
-            User's question: "{user_query}"
-            Context: {context}
-
-            Respond conversationally in natural flowing sentences. No bullet points.
-            """
-
+        enhanced_prompt = get_prompt(
+            'main_response_generator',
+            system_guidance=system_guidance,
+            scenario_block=scenario_block,
+            user_query=user_query,
+            conversation_context=conversation_context,
+            context=context,
+            task=task,
+            format_instructions=format_instructions
+        )
 
         # Generate response
         llm_response = llm_model.generate_content(enhanced_prompt, generation_config={'temperature': 0.2})
@@ -834,14 +735,7 @@ Be natural and conversational. Ask your 2-3 questions directly without robotic p
 
             # Convert bullet points to conversational text for simple responses
             if 0 < bullet_count <= 5:  # Only small lists - preserve complex structures
-                conversion_prompt = f"""
-                Convert this response to natural conversational flowing text without bullet points.
-                Keep the same information but write it as flowing sentences.
-
-                {answer}
-
-                Output only the conversational version.
-                """
+                conversion_prompt = get_prompt('bullet_point_converter', answer=answer)
                 try:
                     converted = llm_model.generate_content(conversion_prompt, generation_config={'temperature': 0.1})
                     answer = converted.text.strip()

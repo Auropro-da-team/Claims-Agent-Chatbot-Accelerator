@@ -661,8 +661,9 @@ agent_backend/
 │   │   ├── __init__.py
 │   │   ├── history_manager.py      # Conversation state management
 │   │   ├── parsers.py              # Entity extraction & parsing 
+│   │   ├── prompt_loader.py        # Load prompts from YAML 
 │   │   └── reference_builder.py    # Citation generation  
-│   │  
+│   │   
 |   ├── __init__.py
 │   └── main.py                     # Cloud Function Entrypoint
 │      
