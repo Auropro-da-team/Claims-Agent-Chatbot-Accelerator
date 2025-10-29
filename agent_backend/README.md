@@ -650,14 +650,14 @@ python-dotenv         # Environment management
 agent_backend/
 │
 ├── app/
-│   ├── services/
+│   ├── services/                    # Files with business logic
 │   │   ├── __init__.py
 │   │   ├── analysis_service.py      # Intent analysis & conversation flow
 │   │   ├── document_service.py      # GCS integration & policy validation
 │   │   ├── llm_service.py          # Gemini model interaction
 │   │   └── search_service.py       # Vector search orchestration
 │   │
-|   ├── utils/
+|   ├── utils/                      # Holds helper modules
 │   │   ├── __init__.py
 │   │   ├── history_manager.py      # Conversation state management
 │   │   ├── parsers.py              # Entity extraction & parsing 
@@ -666,17 +666,29 @@ agent_backend/
 │   │   
 |   ├── __init__.py
 │   └── main.py                     # Cloud Function Entrypoint
-│      
-├── config/
+│   
+├── tests/
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── test_analysis_service.py
+│   │   ├── test_document_service.py
+│   │   ├── test_llm_service.py
+│   │   └── test_search_service.py
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── test_parsers.py
+│   │   └── test_reference_builder.py
+│   ├── __init__.py
+│   ├── conftest.py
+|   ├──journey_b_standard_fnol.sh # Integration tests
+│   └── test_main.py               
+|     
+├── config/                         # Contains application configuration
 │   ├── __init__.py
 │   └── settings.py                # Configuration
 │
 ├── prompts/
 │   └── insurance_claim_assistant_v1.0.yaml      # Prompts
-│
-├── tests/
-│   ├── __init__.py
-│   └── journey_b_standard_fnol.sh # Integration tests
 │
 ├── prompt_registry.yaml          # Prompt Registry
 ├── requirements.txt              # Python dependencies

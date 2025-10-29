@@ -6,3 +6,6 @@ google-cloud-storage
 vertexai
 python-dotenv
 PyYAML
+pytest
+pytest-cov
+pytest-mock
